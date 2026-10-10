@@ -1,0 +1,6 @@
+{
+  "name": "AgentReach - AI Marketing & Customer Growth Agent",
+  "description": "All-in-one AI marketing agent to discover prospective customers, launch automated personalized email outreach, and generate high-converting social posts, images, brochures, and video ads.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
