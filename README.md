@@ -102,10 +102,23 @@ npm start
 
 ---
 
-## 🌐 Deploying to Vercel or Cloud Run
+## 🌐 Deploying to Vercel, Render, or Cloud Run
 
-AgentReach is built to deploy seamlessly on Vercel, Google Cloud Run, or any Node.js hosting platform:
-- Build command: `npm run build`
-- Start command: `npm start`
-- Output directory: `dist`
-- Environment Variables: Add `GEMINI_API_KEY` in your hosting dashboard.
+AgentReach is built to deploy seamlessly on Render, Railway, Vercel, Google Cloud Run, or any Node.js hosting platform:
+- **Build command**: `npm run build`
+- **Start command**: `npm start`
+- **Output directory**: `dist`
+- **Environment Variables**: Add `GEMINI_API_KEY` and `PORT=3000` in your hosting dashboard.
+
+---
+
+## ❓ Troubleshooting & GitHub FAQs
+
+### Why does opening `index.html` or clicking files on GitHub not show the live website?
+1. **GitHub is a code repository, not an automatic web server**: Pushing code to GitHub stores your project files, but does not automatically execute them as a live website.
+2. **Cannot double-click `index.html`**: This is a modern React + TypeScript + Node application (`/src/main.tsx`). Web browsers cannot execute `.tsx` files directly without the Vite compiler running. Opening `index.html` directly in a browser via `file://` will produce a blank page.
+3. **Requires Node.js runtime**: The app uses an Express backend (`server.ts`) for AI API orchestration and streaming.
+
+### How to view the app:
+- **To run locally**: Install [Node.js](https://nodejs.org), run `npm install`, then run `npm run dev`, and visit `http://localhost:3000`.
+- **To host publicly for free**: Connect your GitHub repository to [Render.com](https://render.com) (New Web Service → Build: `npm run build` → Start: `npm start`).

@@ -34,7 +34,7 @@ export const ActionButtonsRow: React.FC<ActionButtonsRowProps> = ({
   }[] = [
     {
       id: 'create-image',
-      label: 'Create Image',
+      label: 'Images',
       icon: Image,
       gradient: 'from-pink-500 via-rose-500 to-amber-500',
       glowColor: 'group-hover:shadow-[0_0_25px_rgba(244,63,94,0.4)]',
@@ -42,7 +42,7 @@ export const ActionButtonsRow: React.FC<ActionButtonsRowProps> = ({
     },
     {
       id: 'create-post',
-      label: 'Create Post',
+      label: 'Posts',
       icon: FileText,
       gradient: 'from-indigo-500 via-purple-500 to-pink-500',
       glowColor: 'group-hover:shadow-[0_0_25px_rgba(99,102,241,0.4)]',
@@ -50,7 +50,7 @@ export const ActionButtonsRow: React.FC<ActionButtonsRowProps> = ({
     },
     {
       id: 'create-video',
-      label: 'Create Video',
+      label: 'Videos',
       icon: Video,
       gradient: 'from-violet-600 via-indigo-600 to-cyan-500',
       glowColor: 'group-hover:shadow-[0_0_25px_rgba(139,92,246,0.4)]',
@@ -58,7 +58,7 @@ export const ActionButtonsRow: React.FC<ActionButtonsRowProps> = ({
     },
     {
       id: 'create-brochure',
-      label: 'Create Brochure',
+      label: 'Brochures',
       icon: BookOpen,
       gradient: 'from-cyan-500 via-teal-500 to-emerald-500',
       glowColor: 'group-hover:shadow-[0_0_25px_rgba(34,211,238,0.4)]',

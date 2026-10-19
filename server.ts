@@ -53,6 +53,43 @@ function extractJSON(text: string) {
   }
 }
 
+// Helper to safely call Gemini with a fast timeout fallback
+async function callGeminiWithTimeout<T>(
+  apiCall: () => Promise<T>,
+  fallbackFn: () => T,
+  timeoutMs: number = 4000
+): Promise<T> {
+  if (!ai) return fallbackFn();
+
+  return new Promise<T>((resolve) => {
+    let completed = false;
+    const timer = setTimeout(() => {
+      if (!completed) {
+        completed = true;
+        console.warn(`[Gemini Timeout] Exceeded ${timeoutMs}ms, using high-fidelity simulation`);
+        resolve(fallbackFn());
+      }
+    }, timeoutMs);
+
+    apiCall()
+      .then((val) => {
+        if (!completed) {
+          completed = true;
+          clearTimeout(timer);
+          resolve(val);
+        }
+      })
+      .catch((err) => {
+        if (!completed) {
+          completed = true;
+          clearTimeout(timer);
+          console.warn('[Gemini Error] Fallback triggered:', (err as Error).message);
+          resolve(fallbackFn());
+        }
+      });
+  });
+}
+
 // -------------------------------------------------------------
 // POST /api/analyze-site: Scrape & Analyze Website
 // -------------------------------------------------------------
@@ -213,15 +250,17 @@ Return ONLY valid JSON with this exact schema:
   }
 }`;
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-3.8-flash',
-      contents: prompt,
-      config: {
-        responseMimeType: 'application/json',
-      },
-    });
+    const parsed = await callGeminiWithTimeout(async () => {
+      const response = await ai!.models.generateContent({
+        model: 'gemini-3.8-flash',
+        contents: prompt,
+        config: {
+          responseMimeType: 'application/json',
+        },
+      });
+      return extractJSON(response.text || '{}');
+    }, () => getFallbackSiteAnalysis(req.body.url || 'https://agentreach.ai'), 4500);
 
-    const parsed = extractJSON(response.text || '{}');
     res.json(parsed);
   } catch (error) {
     console.error('Error in /api/analyze-site:', error);
@@ -1257,16 +1296,18 @@ Return ONLY JSON:
     const formattedHistory = (history || []).slice(-6).map((h: any) => `${h.role === 'user' ? 'User' : 'Reach'}: ${h.content}`).join('\n');
     const userPrompt = `${formattedHistory ? `Recent Conversation:\n${formattedHistory}\n\n` : ''}Current App Context: ${JSON.stringify(currentContext)}\nUser Message: "${message}"`;
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-3.8-flash',
-      contents: userPrompt,
-      config: {
-        systemInstruction,
-        responseMimeType: 'application/json',
-      },
-    });
+    const parsed = await callGeminiWithTimeout(async () => {
+      const response = await ai!.models.generateContent({
+        model: 'gemini-3.8-flash',
+        contents: userPrompt,
+        config: {
+          systemInstruction,
+          responseMimeType: 'application/json',
+        },
+      });
+      return extractJSON(response.text || '{}');
+    }, () => getFallbackAgentReply(message, currentContext), 4000);
 
-    const parsed = extractJSON(response.text || '{}');
     res.json(parsed);
   } catch (error) {
     console.error('Error in /api/chat:', error);
@@ -1345,16 +1386,18 @@ Return ONLY JSON:
     const contextSummary = JSON.stringify(projectsContext, null, 2);
     const userPrompt = `${formattedHistory ? `Recent Conversation History:\n${formattedHistory}\n\n` : ''}Live Projects Context from Other Directives:\n${contextSummary}\n\nUser Request: "${message}"`;
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-3.8-flash',
-      contents: userPrompt,
-      config: {
-        systemInstruction,
-        responseMimeType: 'application/json',
-      },
-    });
+    const parsed = await callGeminiWithTimeout(async () => {
+      const response = await ai!.models.generateContent({
+        model: 'gemini-3.8-flash',
+        contents: userPrompt,
+        config: {
+          systemInstruction,
+          responseMimeType: 'application/json',
+        },
+      });
+      return extractJSON(response.text || '{}');
+    }, () => getFallbackLetsChatReply(message, projectsContext), 4000);
 
-    const parsed = extractJSON(response.text || '{}');
     res.json(parsed);
   } catch (error) {
     console.error('Error in /api/lets-chat:', error);

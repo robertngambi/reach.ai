@@ -13,6 +13,8 @@ import {
   PostCampaign,
   ImageAsset,
   DirectiveSettings,
+  ActivityProject,
+  SettingsSectionId,
 } from '../types';
 
 interface AppStats {
@@ -28,8 +30,15 @@ interface AppContextType {
   setActiveTab: (tab: NavTab) => void;
   activeDirective: GeneratorDirective;
   setActiveDirective: (directive: GeneratorDirective) => void;
-  activeSettingsSection: GeneratorDirective | 'general';
-  setActiveSettingsSection: (section: GeneratorDirective | 'general') => void;
+  activeSettingsSection: SettingsSectionId;
+  setActiveSettingsSection: (section: SettingsSectionId) => void;
+  
+  // My Activities (History & Project Location)
+  activityProjects: ActivityProject[];
+  setActivityProjects: React.Dispatch<React.SetStateAction<ActivityProject[]>>;
+  addActivityProject: (project: Omit<ActivityProject, 'id' | 'timestamp' | 'createdAt'>) => void;
+  deleteActivityProject: (id: string) => void;
+  loadActivityProjectIntoStudio: (project: ActivityProject) => void;
   
   theme: 'dark' | 'light';
   toggleTheme: () => void;
@@ -193,6 +202,21 @@ const defaultDirectiveSettings: DirectiveSettings = {
     enableImageOptimization: true,
     domainMapping: 'reach-website.run.app',
   },
+  books: {
+    defaultGenre: 'non-fiction',
+    defaultAlignment: 'justify',
+    enableIllustrations: true,
+    imagesPerChapter: 2,
+    defaultImageType: 'cinematic photorealism',
+    antiAiStrictCadence: true,
+  },
+  chat: {
+    defaultMode: 'all',
+    crossDirectiveAwareness: true,
+    codeStyle: 'TypeScript / React',
+    detailedArchitecture: true,
+    autoSaveSolutionsToArchive: true,
+  },
 };
 
 const initialLeads: Lead[] = [
@@ -263,12 +287,254 @@ const initialLeads: Lead[] = [
   },
 ];
 
+const initialActivityProjects: ActivityProject[] = [
+  // 1. Create Leads Location
+  {
+    id: 'act-lead-1',
+    directive: 'create-leads',
+    title: 'Enterprise CloudForge ICP Prospecting Scan',
+    description: 'Extracted 5 verified B2B decision-makers with 95% average fit score and personalized outreach hooks.',
+    prompt: 'Find high-intent VP Growth & Demand Gen leads for CloudForge Systems',
+    timestamp: '15 mins ago',
+    createdAt: '2026-10-12 10:05',
+    status: 'Completed',
+    tags: ['B2B Leads', 'Verified Emails', 'Cloud Infrastructure'],
+    metrics: [{ label: 'Leads Found', value: 5 }, { label: 'Avg Fit Score', value: '95%' }],
+    preview: { leadsCount: 5, statsHighlight: '95% Fit Rate' },
+  },
+  {
+    id: 'act-lead-2',
+    directive: 'create-leads',
+    title: 'Aura MedTech Regional Clinic Outreach Scan',
+    description: 'Discovered healthcare operations directors seeking automated patient communications.',
+    prompt: 'Scan regional healthcare clinics needing operational outreach',
+    timestamp: '2 hours ago',
+    createdAt: '2026-10-12 08:20',
+    status: 'Completed',
+    tags: ['MedTech', 'Regional Outreach'],
+    metrics: [{ label: 'Leads Found', value: 8 }, { label: 'Avg Fit Score', value: '91%' }],
+  },
+  // 2. Create Image Location
+  {
+    id: 'act-img-1',
+    directive: 'create-image',
+    title: 'Minimal Modern Vector Logo & Emblem Suite',
+    description: 'Clean geometric brand mark in 1:1 aspect ratio with responsive dark/light silhouettes.',
+    prompt: 'Minimal modern vector logo emblem for AI customer growth platform',
+    timestamp: '40 mins ago',
+    createdAt: '2026-10-12 09:40',
+    status: 'Completed',
+    tags: ['Logo Design', 'Vector', '1:1 Square'],
+    metrics: [{ label: 'Variations', value: 4 }, { label: 'Aspect Ratio', value: '1:1' }],
+    preview: {
+      imageUrls: [
+        'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=600&q=80',
+        'https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&w=600&q=80',
+      ],
+    },
+  },
+  {
+    id: 'act-img-2',
+    directive: 'create-image',
+    title: 'High-Converting 3D Dashboard Mockups',
+    description: 'Neon volumetric workspace rendering demonstrating conversion acceleration.',
+    prompt: '3D Render futuristic analytics dashboard glow',
+    timestamp: 'Yesterday',
+    createdAt: '2026-10-11 16:30',
+    status: 'Rendered',
+    tags: ['3D Render', 'Product Shot'],
+    metrics: [{ label: 'Resolution', value: '4K' }],
+  },
+  // 3. Create Post Location
+  {
+    id: 'act-post-1',
+    directive: 'create-post',
+    title: 'Multi-Channel Launch Campaign: LinkedIn & X',
+    description: 'Viral hook: "Stop spending 20 hours a week finding customers manually." Multi-platform copy with optimal posting schedules.',
+    prompt: 'Announcing autonomous pipeline growth engine',
+    timestamp: '1 hour ago',
+    createdAt: '2026-10-12 09:20',
+    status: 'Published',
+    tags: ['LinkedIn', 'Twitter/X', 'Viral Hook'],
+    metrics: [{ label: 'Platforms', value: 'LinkedIn, X' }, { label: 'Best Time', value: 'Tue 9:15 AM' }],
+    preview: { platforms: ['linkedin', 'twitter'] },
+  },
+  {
+    id: 'act-post-2',
+    directive: 'create-post',
+    title: 'Instagram & TikTok Founder Case Study Reel Post',
+    description: 'Visual carousel and snappy captions highlighting 10x pipeline creation in 48 hours.',
+    prompt: 'Founder case study highlighting 10x pipeline creation',
+    timestamp: '3 hours ago',
+    createdAt: '2026-10-12 07:15',
+    status: 'Completed',
+    tags: ['Instagram', 'TikTok', 'Growth Story'],
+    metrics: [{ label: 'Hashtags', value: '#GrowthHacking' }],
+  },
+  // 4. Create Video Location
+  {
+    id: 'act-vid-1',
+    directive: 'create-video',
+    title: 'Commercial Story Spotlight (3-Minute Ad)',
+    description: 'Multi-scene cinematic commercial storyboard with Kore neural voice narration, synchronized audio cues, and modern corporate aesthetic.',
+    prompt: 'Commercial Schematic video ad for AgentReach AI (Modern world)',
+    timestamp: '25 mins ago',
+    createdAt: '2026-10-12 09:55',
+    status: 'Completed',
+    tags: ['Commercial Spotlight', '3min', 'Modern World', 'Kore Voice'],
+    metrics: [{ label: 'Duration', value: '3min (180s)' }, { label: 'Scenes', value: 5 }, { label: 'Voiceover', value: 'Kore (Neural TTS)' }],
+    preview: { durationLabel: '3min', scenesCount: 5 },
+  },
+  {
+    id: 'act-vid-2',
+    directive: 'create-video',
+    title: 'Rapid Explainer Video (1-Minute)',
+    description: 'Dynamic explainer breakdown showing URL scanning, lead extraction, and 1-click email sequence.',
+    prompt: '1-minute product explainer breakdown',
+    timestamp: 'Yesterday',
+    createdAt: '2026-10-11 14:10',
+    status: 'Completed',
+    tags: ['Explainer', '1min', 'Puck Voice'],
+    metrics: [{ label: 'Duration', value: '1min' }, { label: 'Scenes', value: 3 }],
+  },
+  // 5. Create Brochure Location
+  {
+    id: 'act-brochure-1',
+    directive: 'create-brochure',
+    title: 'Executive Tri-Fold Brand & Services Folio',
+    description: 'Print-ready marketing brochure featuring 3 service pillars, client testimonials, ROI stats, and contact QR code.',
+    prompt: 'Marketing brochure for AgentReach AI customer discovery engine',
+    timestamp: '50 mins ago',
+    createdAt: '2026-10-12 09:30',
+    status: 'Completed',
+    tags: ['Tri-Fold', 'Print-Ready', 'Brand Colors', 'PDF Export'],
+    metrics: [{ label: 'Format', value: 'Tri-Fold' }, { label: 'Key Pillars', value: 3 }, { label: 'Print Mode', value: 'CMYK / 300 DPI' }],
+    preview: { template: 'Tri-Fold' },
+  },
+  {
+    id: 'act-brochure-2',
+    directive: 'create-brochure',
+    title: 'Modern Product One-Pager & Flyer',
+    description: 'Sleek bi-fold sales leave-behind with high-contrast value proposition and executive summary.',
+    prompt: 'Bi-fold leave-behind sheet for enterprise pitches',
+    timestamp: '2 days ago',
+    createdAt: '2026-10-10 11:00',
+    status: 'Completed',
+    tags: ['Bi-Fold', 'Sales Collateral'],
+    metrics: [{ label: 'Template', value: 'Bi-Fold' }],
+  },
+  // 6. Create Apps Location
+  {
+    id: 'act-app-1',
+    directive: 'create-apps',
+    title: 'AgentReach Mobile Client & Pipeline Portal',
+    description: 'React Native (Expo) multi-screen app architecture targeting Android & iOS with Google OAuth, push notifications, and Stripe checkout.',
+    prompt: 'Full mobile app for customer discovery and growth pipeline',
+    timestamp: '30 mins ago',
+    createdAt: '2026-10-12 09:50',
+    status: 'Active',
+    tags: ['Android', 'iOS', 'Expo', 'React Native'],
+    metrics: [{ label: 'Screens', value: 4 }, { label: 'Integrations', value: 5 }, { label: 'Bundle ID', value: 'com.reach.ai.app' }],
+    preview: { screensCount: 4, platforms: ['Android', 'iOS'] },
+  },
+  {
+    id: 'act-app-2',
+    directive: 'create-apps',
+    title: 'LeadPulse Offline Field Companion',
+    description: 'Lightweight sales field companion with SQLite caching and biometric sign-in.',
+    prompt: 'Sales team field companion with offline lead sync',
+    timestamp: 'Yesterday',
+    createdAt: '2026-10-11 11:45',
+    status: 'Completed',
+    tags: ['Mobile App', 'Offline Sync'],
+    metrics: [{ label: 'Screens', value: 3 }],
+  },
+  // 7. Create Websites Location
+  {
+    id: 'act-web-1',
+    directive: 'create-websites',
+    title: 'AgentReach Next-Gen Cloud Platform Website',
+    description: 'Responsive desktop & mobile website with Hero, Feature matrix, Testimonials, Interactive Demo, and Google Cloud Run deployment config.',
+    prompt: 'Modern high-converting responsive website with imported brand pictures',
+    timestamp: '15 mins ago',
+    createdAt: '2026-10-12 10:05',
+    status: 'Published',
+    tags: ['Responsive Web', 'Cloud Run', 'SEO Optimized', 'Tailwind'],
+    metrics: [{ label: 'Sections', value: 5 }, { label: 'Responsive', value: 'Desktop & Mobile' }, { label: 'Deploy Target', value: 'Cloud Run' }],
+    preview: { statsHighlight: 'SEO 98/100' },
+  },
+  {
+    id: 'act-web-2',
+    directive: 'create-websites',
+    title: 'Growth Agency High-Converting Landing Page',
+    description: 'Minimalist B2B conversion page with live lead calculator and Calendly integration.',
+    prompt: 'Conversion landing page for outbound agency',
+    timestamp: '2 days ago',
+    createdAt: '2026-10-10 15:20',
+    status: 'Completed',
+    tags: ['Landing Page', 'High Conversion'],
+    metrics: [{ label: 'Sections', value: 4 }],
+  },
+  // 8. Create Books Location
+  {
+    id: 'act-book-1',
+    directive: 'create-books',
+    title: 'The Silent Horizon: A Novel of Secret Alliances',
+    description: '5-chapter ensemble narrative exploring human conscience and hidden technological thresholds. Justified typography with cinematic photorealism illustrations.',
+    prompt: 'A gripping exploration of resilience, secret alliances, and breakthroughs',
+    timestamp: '45 mins ago',
+    createdAt: '2026-10-12 09:35',
+    status: 'Active',
+    tags: ['Fiction', '5 Chapters', 'Justify Alignment', 'Illustrated'],
+    metrics: [{ label: 'Chapters', value: 5 }, { label: 'Genre', value: 'Fiction' }, { label: 'Illustrations', value: '2 per chapter' }],
+    preview: { chaptersCount: 5, genre: 'Fiction' },
+  },
+  {
+    id: 'act-book-2',
+    directive: 'create-books',
+    title: 'The Outbound Blueprint: Scalable Enterprise Growth',
+    description: '10-chapter non-fiction business playbook detailing automated cold outreach systems.',
+    prompt: 'Comprehensive non-fiction playbook on automated sales',
+    timestamp: 'Yesterday',
+    createdAt: '2026-10-11 09:00',
+    status: 'Completed',
+    tags: ['Non-Fiction', '10 Chapters', 'Business'],
+    metrics: [{ label: 'Chapters', value: 10 }, { label: 'Genre', value: 'Business' }],
+  },
+  // 9. Let's Chat Location
+  {
+    id: 'act-chat-1',
+    directive: 'lets-chat',
+    title: 'Cross-Directive App Conversion: Brochure to Mobile UI',
+    description: 'Synthesized brochure headlines, color scheme (#6366F1), and key features into complete React Native mobile app cover code.',
+    prompt: 'from the brochure that was created in brochure directive, create an app of the same cover interface',
+    timestamp: '10 mins ago',
+    createdAt: '2026-10-12 10:10',
+    status: 'Completed',
+    tags: ['Cross-Directive', 'Code Generation', 'React Native'],
+    metrics: [{ label: 'Referenced', value: 'Brochure → Apps' }, { label: 'Language', value: 'TypeScript' }],
+    preview: { codePreview: 'import React from "react";\nimport { View, Text, StyleSheet } from "react-native";\n// Generated from Brochure Cover Interface...' },
+  },
+  {
+    id: 'act-chat-2',
+    directive: 'lets-chat',
+    title: 'Daily Marketing Task Solutions & Timetable',
+    description: 'Prioritized morning lead extraction, noon social post rollout, and afternoon video storyboard production.',
+    prompt: 'Prepare our daily tasks solutions for today across all marketing directives',
+    timestamp: '1 hour ago',
+    createdAt: '2026-10-12 09:20',
+    status: 'Completed',
+    tags: ['Daily Tasks', 'Productivity', 'Directives Plan'],
+    metrics: [{ label: 'Tasks Solved', value: 6 }],
+  },
+];
+
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [activeTab, setActiveTab] = useState<NavTab>('studio');
   const [activeDirective, setActiveDirective] = useState<GeneratorDirective>('create-leads');
-  const [activeSettingsSection, setActiveSettingsSection] = useState<GeneratorDirective | 'general'>('create-video');
+  const [activeSettingsSection, setActiveSettingsSection] = useState<SettingsSectionId>('create-video');
 
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -449,6 +715,52 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }));
   };
 
+  // Activity Projects State (Centralized History Location per Directive)
+  const [activityProjects, setActivityProjects] = useState<ActivityProject[]>(() => {
+    try {
+      const saved = localStorage.getItem('reach_user_activities');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+      return initialActivityProjects;
+    } catch {
+      return initialActivityProjects;
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('reach_user_activities', JSON.stringify(activityProjects));
+    } catch (e) {
+      console.warn('Failed to persist activityProjects', e);
+    }
+  }, [activityProjects]);
+
+  const addActivityProject = (project: Omit<ActivityProject, 'id' | 'timestamp' | 'createdAt'>) => {
+    const now = new Date();
+    const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+    const newProj: ActivityProject = {
+      ...project,
+      id: `act-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      timestamp: 'Just now',
+      createdAt: dateStr,
+    };
+    setActivityProjects((prev) => [newProj, ...prev]);
+  };
+
+  const deleteActivityProject = (id: string) => {
+    setActivityProjects((prev) => prev.filter((p) => p.id !== id));
+    addToast('Activity Removed', 'Deleted project from history location.', 'info');
+  };
+
+  const loadActivityProjectIntoStudio = (project: ActivityProject) => {
+    setActiveDirective(project.directive);
+    setActiveTab('studio');
+    celebrate();
+    addToast('Opened in Directive', `Loaded "${project.title}" in ${project.directive}!`, 'success');
+  };
+
   const addHistoryItem = (item: Omit<HistoryItem, 'id' | 'timestamp'>) => {
     const newItem: HistoryItem = {
       ...item,
@@ -456,6 +768,29 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       timestamp: 'Just now',
     };
     setHistoryItems((prev) => [newItem, ...prev]);
+
+    // Map history item type to generator directive location so every generation activity goes to its generator location
+    const typeToDirective: Record<string, GeneratorDirective> = {
+      lead_scan: 'create-leads',
+      email_campaign: 'create-leads',
+      image: 'create-image',
+      post: 'create-post',
+      video: 'create-video',
+      brochure: 'create-brochure',
+      app: 'create-apps',
+      website: 'create-websites',
+      book: 'create-books',
+      chat: 'lets-chat',
+    };
+
+    const directive = typeToDirective[item.type] || 'create-leads';
+    addActivityProject({
+      directive,
+      title: item.title,
+      description: item.description,
+      status: 'Completed',
+      tags: [directive.replace('create-', ''), 'Generated Activity'],
+    });
   };
 
   const toggleLeadSelection = (id: string) => {
@@ -623,6 +958,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setAttachedAsset,
         historyItems,
         addHistoryItem,
+        activityProjects,
+        setActivityProjects,
+        addActivityProject,
+        deleteActivityProject,
+        loadActivityProjectIntoStudio,
         stats,
         incrementStat,
         toasts,

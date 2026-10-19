@@ -19,6 +19,7 @@ import {
   Globe,
   BookMarked,
   MessageSquareCode,
+  FolderClock,
   X,
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
@@ -38,6 +39,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
     setIsSidebarCollapsed,
     toggleChat,
     leads,
+    activeSettingsSection,
     setActiveSettingsSection,
   } = useApp();
 
@@ -74,15 +76,15 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
     icon: React.ElementType;
     color: string;
   }[] = [
-    { id: 'create-leads', label: 'Create leads', icon: Compass, color: 'text-violet-400' },
-    { id: 'create-image', label: 'Create Image', icon: ImageIcon, color: 'text-pink-400' },
-    { id: 'create-post', label: 'Create Post', icon: FileText, color: 'text-amber-400' },
-    { id: 'create-video', label: 'Create Video', icon: Video, color: 'text-cyan-400' },
-    { id: 'create-brochure', label: 'Create Brochure', icon: BookOpen, color: 'text-emerald-400' },
-    { id: 'create-apps', label: 'Create Apps', icon: Smartphone, color: 'text-blue-400' },
-    { id: 'create-websites', label: 'Create websites', icon: Globe, color: 'text-teal-400' },
-    { id: 'create-books', label: 'Create Books', icon: BookMarked, color: 'text-amber-400' },
-    { id: 'lets-chat', label: "Let's Chat", icon: MessageSquareCode, color: 'text-fuchsia-400' },
+    { id: 'create-leads', label: 'Leads', icon: Compass, color: 'text-violet-400' },
+    { id: 'create-image', label: 'Images', icon: ImageIcon, color: 'text-pink-400' },
+    { id: 'create-post', label: 'Posts', icon: FileText, color: 'text-amber-400' },
+    { id: 'create-video', label: 'Videos', icon: Video, color: 'text-cyan-400' },
+    { id: 'create-brochure', label: 'Brochures', icon: BookOpen, color: 'text-emerald-400' },
+    { id: 'create-apps', label: 'Apps', icon: Smartphone, color: 'text-blue-400' },
+    { id: 'create-websites', label: 'Websites', icon: Globe, color: 'text-teal-400' },
+    { id: 'create-books', label: 'Books', icon: BookMarked, color: 'text-amber-400' },
+    { id: 'lets-chat', label: 'Chat', icon: MessageSquareCode, color: 'text-fuchsia-400' },
   ];
 
   return (

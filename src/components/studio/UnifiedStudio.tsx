@@ -81,6 +81,7 @@ export const UnifiedStudio: React.FC = () => {
     celebrate,
     incrementStat,
     addHistoryItem,
+    addActivityProject,
     setActiveTab,
     setActiveSettingsSection,
   } = useApp();
@@ -377,6 +378,9 @@ export const UnifiedStudio: React.FC = () => {
     ],
   });
 
+  // Chat incoming prompt state for lets-chat directive
+  const [chatInitialPrompt, setChatInitialPrompt] = useState('');
+
   // -------------------------------------------------------------
   // Master Generate Dispatcher
   // -------------------------------------------------------------
@@ -667,6 +671,14 @@ export const UnifiedStudio: React.FC = () => {
     } else if (activeDirective === 'create-books') {
       const focus = promptInput.trim() || `An unforgettable journey exploring modern transformation, resilience, and hidden truths.`;
       await handleGenerateBookConcept(bookGenre, focus);
+    } else if (activeDirective === 'lets-chat') {
+      const chatPrompt = promptInput.trim();
+      if (chatPrompt) {
+        setChatInitialPrompt(chatPrompt);
+        setPromptInput('');
+      }
+      setIsLoading(false);
+      return;
     }
 
     setIsLoading(false);
@@ -968,63 +980,63 @@ export const UnifiedStudio: React.FC = () => {
   }[] = [
     {
       id: 'create-leads',
-      label: 'Create leads',
+      label: 'Leads',
       icon: Compass,
       gradient: 'from-indigo-500 via-purple-600 to-pink-500',
       description: 'Search buyers, generate leads & automate email outreach',
     },
     {
       id: 'create-image',
-      label: 'Create Image',
+      label: 'Images',
       icon: ImageIcon,
       gradient: 'from-pink-500 via-rose-500 to-amber-500',
       description: 'Logos, 3D renders, realistic shots & ad banners',
     },
     {
       id: 'create-post',
-      label: 'Create Post',
+      label: 'Posts',
       icon: FileText,
       gradient: 'from-amber-500 via-orange-500 to-pink-500',
       description: 'LinkedIn, Instagram, X, Facebook & TikTok copy',
     },
     {
       id: 'create-video',
-      label: 'Create Video',
+      label: 'Videos',
       icon: Video,
       gradient: 'from-violet-600 via-indigo-600 to-cyan-500',
       description: 'Schematic stories, explainer ads & neural voice',
     },
     {
       id: 'create-brochure',
-      label: 'Create Brochure',
+      label: 'Brochures',
       icon: BookOpen,
       gradient: 'from-cyan-500 via-teal-500 to-emerald-500',
       description: 'Tri-folds, flyers, PDF sheets & live print export',
     },
     {
       id: 'create-apps',
-      label: 'Create Apps',
+      label: 'Apps',
       icon: Smartphone,
       gradient: 'from-blue-600 via-indigo-600 to-purple-600',
       description: 'Full responsive mobile & web apps with live chassis',
     },
     {
       id: 'create-websites',
-      label: 'Create websites',
+      label: 'Websites',
       icon: Globe,
       gradient: 'from-emerald-500 via-teal-600 to-cyan-500',
       description: 'Modern responsive websites with picture import',
     },
     {
       id: 'create-books',
-      label: 'Create Books',
+      label: 'Books',
       icon: BookMarked,
       gradient: 'from-amber-600 via-orange-600 to-rose-600',
       description: 'Anti-AI full books, chapter layout & export',
     },
     {
       id: 'lets-chat',
-      label: "Let's Chat",
+      label: 'Chat',
       icon: MessageSquareCode,
       gradient: 'from-fuchsia-600 via-indigo-600 to-cyan-500',
       description: 'Conversational agent for coding, solutions, daily tasks & cross-project intelligence',
@@ -1218,6 +1230,8 @@ export const UnifiedStudio: React.FC = () => {
                     ? `Describe app concept, core features, and user roles...`
                     : activeDirective === 'create-websites'
                     ? `Describe website topic, page sections, and style...`
+                    : activeDirective === 'lets-chat'
+                    ? `Ask Let's Chat anything, request code, cross-directive synergy (e.g. create app from brochure), or daily task solutions...`
                     : `Enter core premise, plot summary, or book focus...`
                 }
                 className="w-full p-4 pr-32 rounded-2xl bg-white/[0.07] border border-white/15 text-white placeholder-slate-400 text-sm focus:outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/30 transition-all resize-y shadow-inner"
@@ -2442,6 +2456,32 @@ export const UnifiedStudio: React.FC = () => {
           onGenerateChapter={handleGenerateBookChapter}
           onRegenerateImage={handleRegenerateChapterImage}
           isLoading={isLoading}
+          addToast={addToast}
+          celebrate={celebrate}
+        />
+      )}
+
+      {/* 9. Results for 'Let's Chat': Cross-Directive Polymath Conversational Intelligence */}
+      {activeDirective === 'lets-chat' && (
+        <LetsChatStudioWorkflow
+          initialPrompt={chatInitialPrompt}
+          onClearInitialPrompt={() => setChatInitialPrompt('')}
+          brochure={brochure}
+          setBrochure={setBrochure}
+          videoProject={videoProject}
+          setVideoProject={setVideoProject}
+          generatedPost={generatedPost}
+          setGeneratedPost={setGeneratedPost}
+          appProject={appProject}
+          setAppProject={setAppProject}
+          websiteProject={websiteProject}
+          setWebsiteProject={setWebsiteProject}
+          bookProject={bookProject}
+          leads={leads}
+          businessInfo={businessInfo}
+          directiveSettings={directiveSettings}
+          setActiveDirective={setActiveDirective}
+          setActiveTab={setActiveTab}
           addToast={addToast}
           celebrate={celebrate}
         />

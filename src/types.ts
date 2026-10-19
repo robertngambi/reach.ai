@@ -210,6 +210,21 @@ export interface DirectiveSettings {
     enableImageOptimization: boolean;
     domainMapping: string;
   };
+  books: {
+    defaultGenre: string;
+    defaultAlignment: 'left' | 'center' | 'justify' | 'right';
+    enableIllustrations: boolean;
+    imagesPerChapter: 2 | 5 | 8 | 10;
+    defaultImageType: string;
+    antiAiStrictCadence: boolean;
+  };
+  chat: {
+    defaultMode: 'all' | 'coding' | 'tasks' | 'cross-directive';
+    crossDirectiveAwareness: boolean;
+    codeStyle: 'TypeScript / React' | 'Python' | 'Full Stack';
+    detailedArchitecture: boolean;
+    autoSaveSolutionsToArchive: boolean;
+  };
 }
 
 export interface GeneratedFile {
@@ -332,11 +347,41 @@ export interface BookProject {
 
 export interface HistoryItem {
   id: string;
-  type: 'lead_scan' | 'email_campaign' | 'image' | 'post' | 'video' | 'brochure' | 'app' | 'website' | 'book';
+  type: 'lead_scan' | 'email_campaign' | 'image' | 'post' | 'video' | 'brochure' | 'app' | 'website' | 'book' | 'chat';
   title: string;
   description: string;
   timestamp: string;
   meta?: any;
+}
+
+export type SettingsSectionId = GeneratorDirective | 'general' | 'brand' | 'my-activities';
+
+export interface ActivityProject {
+  id: string;
+  directive: GeneratorDirective;
+  title: string;
+  description: string;
+  prompt?: string;
+  timestamp: string;
+  createdAt: string;
+  status: 'Completed' | 'Published' | 'Draft' | 'Active' | 'Rendered';
+  tags: string[];
+  metrics?: { label: string; value: string | number }[];
+  preview?: {
+    imageUrls?: string[];
+    thumbnail?: string;
+    durationLabel?: string;
+    scenesCount?: number;
+    codePreview?: string;
+    screensCount?: number;
+    platforms?: string[];
+    leadsCount?: number;
+    chaptersCount?: number;
+    genre?: string;
+    template?: string;
+    statsHighlight?: string;
+  };
+  payload?: any;
 }
 
 export interface ToastMessage {

@@ -16,12 +16,16 @@ import {
   X,
   Smartphone,
   Globe,
+  FolderClock,
+  Layers,
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { HistoryItem, NavTab } from '../../types';
+import { MyActivitiesFullPage } from '../activities/MyActivitiesFullPage';
 
 export const HistoryModule: React.FC = () => {
   const { historyItems, setActiveTab, setActiveDirective, addToast } = useApp();
+  const [viewMode, setViewMode] = useState<'locations' | 'feed'>('locations');
   const [filterType, setFilterType] = useState<string>('all');
   const [search, setSearch] = useState('');
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -94,28 +98,77 @@ export const HistoryModule: React.FC = () => {
     setTimeout(() => setCopiedId(null), 2000);
   };
 
+  // If viewing Directive Locations (Activities History), render MyActivitiesFullPage with a switcher
+  if (viewMode === 'locations') {
+    return (
+      <div className="space-y-4">
+        {/* View Mode Switcher Header Bar */}
+        <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-2xl glass-panel border border-white/10 bg-black/40">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setViewMode('locations')}
+              className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold text-xs shadow-md shadow-indigo-500/20"
+            >
+              <FolderClock className="w-4 h-4 text-white" />
+              <span>Directive Locations (My Activities)</span>
+            </button>
+            <button
+              onClick={() => setViewMode('feed')}
+              className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white border border-white/10 font-bold text-xs transition-all cursor-pointer"
+            >
+              <History className="w-4 h-4 text-slate-400" />
+              <span>Scan & Event Logs ({historyItems.length})</span>
+            </button>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('studio')}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white border border-white/10 text-xs font-semibold cursor-pointer"
+          >
+            <X className="w-4 h-4" />
+            <span>Return to Studio</span>
+          </button>
+        </div>
+
+        <MyActivitiesFullPage onBackToSettings={() => setViewMode('feed')} />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 pb-16">
-      {/* Top Banner with Exit 'X' Button on top right side */}
-      <div className="flex items-center justify-between">
+      {/* Top Banner with Exit 'X' Button on top right side and View Mode Switcher */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
             <History className="w-6 h-6 text-slate-400" />
-            <h1 className="text-2xl font-extrabold text-white">Campaign & Creation Archive</h1>
+            <h1 className="text-2xl font-extrabold text-white">Archive & History</h1>
           </div>
           <p className="text-xs text-slate-400 mt-1">
             Review and reuse all previously scanned customer leads, cold outreach emails, social posts, apps, websites, and visual assets.
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={() => setActiveTab('studio')}
-          className="flex items-center justify-center w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white border border-white/10 transition-colors cursor-pointer"
-          title="Exit archive and return to studio"
-        >
-          <X className="w-5 h-5" />
-        </button>
+        <div className="flex items-center gap-2.5">
+          <button
+            type="button"
+            onClick={() => setViewMode('locations')}
+            className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-md shadow-indigo-500/20 cursor-pointer"
+          >
+            <FolderClock className="w-4 h-4" />
+            <span>View Directive Locations</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('studio')}
+            className="flex items-center justify-center w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white border border-white/10 transition-colors cursor-pointer"
+            title="Exit archive and return to studio"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
       </div>
 
       {/* Filter and Search Bar */}

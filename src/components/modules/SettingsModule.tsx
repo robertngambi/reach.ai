@@ -27,9 +27,16 @@ import {
   FolderDown,
   BookMarked,
   Feather,
+  Layers,
+  MessageSquareCode,
+  Bot,
+  AlignLeft,
+  AlignCenter,
+  AlignJustify,
+  AlignRight,
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
-import { GeneratorDirective } from '../../types';
+import { GeneratorDirective, SettingsSectionId } from '../../types';
 import { downloadProjectZip } from '../../utils/zipDownloader';
 
 export const SettingsModule: React.FC = () => {
@@ -45,13 +52,25 @@ export const SettingsModule: React.FC = () => {
     celebrate,
   } = useApp();
 
-  const [activeSection, setActiveSection] = useState<GeneratorDirective | 'brand'>(
-    activeSettingsSection === 'general' ? 'create-video' : (activeSettingsSection as any)
+  const [activeSection, setActiveSection] = useState<SettingsSectionId>(
+    activeSettingsSection === 'general' || activeSettingsSection === 'my-activities'
+      ? 'create-video'
+      : (activeSettingsSection as SettingsSectionId)
   );
+
+  React.useEffect(() => {
+    if (activeSettingsSection) {
+      setActiveSection(
+        activeSettingsSection === 'general' || activeSettingsSection === 'my-activities'
+          ? 'create-video'
+          : (activeSettingsSection as SettingsSectionId)
+      );
+    }
+  }, [activeSettingsSection]);
 
   const [isSaved, setIsSaved] = useState(false);
 
-  // Local draft state for settings
+  // Local draft state for settings of all directives
   const [videoSettings, setVideoSettings] = useState(directiveSettings.video);
   const [leadsSettings, setLeadsSettings] = useState(directiveSettings.leads);
   const [imageSettings, setImageSettings] = useState(directiveSettings.image);
@@ -59,6 +78,25 @@ export const SettingsModule: React.FC = () => {
   const [brochureSettings, setBrochureSettings] = useState(directiveSettings.brochure);
   const [appsSettings, setAppsSettings] = useState(directiveSettings.apps);
   const [websitesSettings, setWebsitesSettings] = useState(directiveSettings.websites);
+  const [booksSettings, setBooksSettings] = useState(
+    directiveSettings.books || {
+      defaultGenre: 'non-fiction',
+      defaultAlignment: 'justify' as const,
+      enableIllustrations: true,
+      imagesPerChapter: 2 as const,
+      defaultImageType: 'cinematic photorealism',
+      antiAiStrictCadence: true,
+    }
+  );
+  const [chatSettings, setChatSettings] = useState(
+    directiveSettings.chat || {
+      defaultMode: 'all' as const,
+      crossDirectiveAwareness: true,
+      codeStyle: 'TypeScript / React' as const,
+      detailedArchitecture: true,
+      autoSaveSolutionsToArchive: true,
+    }
+  );
   const [brandInfo, setBrandInfo] = useState(businessInfo);
 
   const handleSaveAll = (e?: React.FormEvent) => {
@@ -71,6 +109,8 @@ export const SettingsModule: React.FC = () => {
       brochure: brochureSettings,
       apps: appsSettings,
       websites: websitesSettings,
+      books: booksSettings,
+      chat: chatSettings,
     });
     setBusinessInfo(brandInfo);
 
@@ -80,15 +120,16 @@ export const SettingsModule: React.FC = () => {
     setTimeout(() => setIsSaved(false), 2500);
   };
 
-  const sections: { id: GeneratorDirective | 'brand'; label: string; icon: React.ElementType }[] = [
-    { id: 'create-video', label: 'Create Video Settings', icon: Video },
-    { id: 'create-leads', label: 'Create Leads Settings', icon: Compass },
-    { id: 'create-image', label: 'Create Image Settings', icon: ImageIcon },
-    { id: 'create-post', label: 'Create Post Settings', icon: FileText },
-    { id: 'create-brochure', label: 'Create Brochure Settings', icon: BookOpen },
-    { id: 'create-apps', label: 'Create Apps Settings', icon: Smartphone },
-    { id: 'create-websites', label: 'Create Websites Settings', icon: Globe },
-    { id: 'create-books', label: 'Create Books Settings', icon: BookMarked },
+  const sections: { id: SettingsSectionId; label: string; icon: React.ElementType; badge?: string }[] = [
+    { id: 'create-video', label: 'Videos', icon: Video },
+    { id: 'create-leads', label: 'Leads', icon: Compass },
+    { id: 'create-image', label: 'Images', icon: ImageIcon },
+    { id: 'create-post', label: 'Posts', icon: FileText },
+    { id: 'create-brochure', label: 'Brochures', icon: BookOpen },
+    { id: 'create-apps', label: 'Apps', icon: Smartphone },
+    { id: 'create-websites', label: 'Websites', icon: Globe },
+    { id: 'create-books', label: 'Books', icon: BookMarked },
+    { id: 'lets-chat', label: 'Chat', icon: MessageSquareCode },
     { id: 'brand', label: 'Brand & AI Engine', icon: Building2 },
   ];
 
@@ -142,14 +183,21 @@ export const SettingsModule: React.FC = () => {
               <button
                 key={sec.id}
                 onClick={() => setActiveSection(sec.id)}
-                className={`w-full flex items-center gap-3 px-3.5 py-3 rounded-2xl text-xs font-semibold transition-all cursor-pointer text-left ${
+                className={`w-full flex items-center justify-between gap-3 px-3.5 py-3 rounded-2xl text-xs font-semibold transition-all cursor-pointer text-left ${
                   isActive
                     ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-md shadow-indigo-500/20'
                     : 'text-slate-300 hover:text-white hover:bg-white/5'
                 }`}
               >
-                <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-indigo-400'}`} />
-                <span>{sec.label}</span>
+                <div className="flex items-center gap-3">
+                  <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-indigo-400'}`} />
+                  <span>{sec.label}</span>
+                </div>
+                {sec.badge && (
+                  <span className="px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 text-[9px] font-bold uppercase tracking-wider">
+                    {sec.badge}
+                  </span>
+                )}
               </button>
             );
           })}
@@ -995,20 +1043,162 @@ export const SettingsModule: React.FC = () => {
               <div className="border-b border-white/10 pb-4">
                 <h3 className="text-base font-extrabold text-white flex items-center gap-2">
                   <BookMarked className="w-5 h-5 text-amber-400" />
-                  <span>Book Publishing & Anti-AI Human Prose Settings</span>
+                  <span>Book Publishing, Layout & Anti-AI Human Prose Settings</span>
                 </h3>
                 <p className="text-xs text-slate-400 mt-1">
-                  Configure default genre style, chapter word count targets, and manuscript export standards.
+                  Configure default genre style, text alignment, illustration density, art styles, and manuscript publishing standards.
                 </p>
+              </div>
+
+              {/* Default Genre Options */}
+              <div className="space-y-3">
+                <span className="block text-xs font-bold text-white uppercase tracking-wider">
+                  Default Book Genre:
+                </span>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
+                  {[
+                    { id: 'non-fiction', label: 'Non-Fiction / Business' },
+                    { id: 'fiction', label: 'Literary Fiction' },
+                    { id: 'kids-books', label: "Children's Book" },
+                    { id: 'fantasy-scifi', label: 'Fantasy & Sci-Fi' },
+                    { id: 'biography-memoir', label: 'Biography & Memoir' },
+                    { id: 'self-help-business', label: 'Self-Help & Growth' },
+                  ].map((g) => (
+                    <button
+                      key={g.id}
+                      type="button"
+                      onClick={() => setBooksSettings({ ...booksSettings, defaultGenre: g.id })}
+                      className={`p-2.5 rounded-xl border text-left font-semibold transition-all ${
+                        booksSettings.defaultGenre === g.id
+                          ? 'bg-amber-500/20 text-amber-300 border-amber-400 shadow-sm'
+                          : 'bg-white/[0.03] border-white/10 text-slate-300 hover:bg-white/[0.06]'
+                      }`}
+                    >
+                      {g.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Text Alignment & Illustrations Count Controls */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                {/* Text Alignment */}
+                <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/10 space-y-2.5">
+                  <span className="block font-bold text-white uppercase tracking-wider text-[11px]">
+                    Manuscript Text Alignment
+                  </span>
+                  <div className="flex items-center gap-2">
+                    {[
+                      { id: 'justify', label: 'Justify', icon: AlignJustify },
+                      { id: 'left', label: 'Left', icon: AlignLeft },
+                      { id: 'center', label: 'Center', icon: AlignCenter },
+                      { id: 'right', label: 'Right', icon: AlignRight },
+                    ].map((align) => {
+                      const Icon = align.icon;
+                      return (
+                        <button
+                          key={align.id}
+                          type="button"
+                          onClick={() => setBooksSettings({ ...booksSettings, defaultAlignment: align.id as any })}
+                          className={`flex items-center gap-1.5 px-3 py-2 rounded-xl border font-bold text-xs transition-all ${
+                            booksSettings.defaultAlignment === align.id
+                              ? 'bg-amber-500 text-slate-950 border-amber-400 shadow-sm'
+                              : 'bg-white/5 border-white/10 text-slate-300 hover:bg-white/10'
+                          }`}
+                        >
+                          <Icon className="w-3.5 h-3.5" />
+                          <span>{align.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Illustrations Density */}
+                <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/10 space-y-2.5">
+                  <span className="block font-bold text-white uppercase tracking-wider text-[11px]">
+                    Illustrations Per Chapter
+                  </span>
+                  <div className="flex items-center gap-2">
+                    {([2, 5, 8, 10] as const).map((num) => (
+                      <button
+                        key={num}
+                        type="button"
+                        onClick={() => setBooksSettings({ ...booksSettings, imagesPerChapter: num })}
+                        className={`px-3.5 py-2 rounded-xl border font-bold text-xs transition-all ${
+                          booksSettings.imagesPerChapter === num
+                            ? 'bg-amber-500 text-slate-950 border-amber-400 shadow-sm'
+                            : 'bg-white/5 border-white/10 text-slate-300 hover:bg-white/10'
+                        }`}
+                      >
+                        {num} Images
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Default Illustration Visual Style */}
+              <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/10 space-y-3 text-xs">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-white uppercase tracking-wider text-[11px]">
+                    Default Chapter Illustration Style:
+                  </span>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={booksSettings.enableIllustrations}
+                      onChange={(e) => setBooksSettings({ ...booksSettings, enableIllustrations: e.target.checked })}
+                      className="w-4 h-4 rounded text-amber-500 focus:ring-amber-400"
+                    />
+                    <span className="text-slate-300 font-semibold">Enable AI chapter artwork</span>
+                  </label>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    'cinematic photorealism',
+                    'vintage watercolor',
+                    'cartoons',
+                    'animals',
+                    'futuristic',
+                    'modern world',
+                    'fantasy & mythical',
+                  ].map((style) => (
+                    <button
+                      key={style}
+                      type="button"
+                      disabled={!booksSettings.enableIllustrations}
+                      onClick={() => setBooksSettings({ ...booksSettings, defaultImageType: style })}
+                      className={`px-3 py-1.5 rounded-xl border font-medium text-xs capitalize transition-all disabled:opacity-40 ${
+                        booksSettings.defaultImageType === style
+                          ? 'bg-amber-500/20 text-amber-300 border-amber-400 shadow-sm'
+                          : 'bg-white/5 border-white/10 text-slate-300 hover:bg-white/10'
+                      }`}
+                    >
+                      {style}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               {/* Anti-AI Writing Directive Quality Assurance */}
               <div className="p-5 rounded-2xl bg-amber-950/20 border border-amber-500/30 space-y-3">
-                <div className="flex items-center gap-2">
-                  <Feather className="w-4 h-4 text-amber-400" />
-                  <span className="text-xs font-bold text-white uppercase tracking-wider">
-                    Anti-AI Human Style Guardrails (Active)
-                  </span>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Feather className="w-4 h-4 text-amber-400" />
+                    <span className="text-xs font-bold text-white uppercase tracking-wider">
+                      Anti-AI Human Style Guardrails (Active)
+                    </span>
+                  </div>
+                  <label className="flex items-center gap-2 cursor-pointer text-xs">
+                    <input
+                      type="checkbox"
+                      checked={booksSettings.antiAiStrictCadence}
+                      onChange={(e) => setBooksSettings({ ...booksSettings, antiAiStrictCadence: e.target.checked })}
+                      className="w-4 h-4 rounded text-amber-500"
+                    />
+                    <span className="text-amber-300 font-bold">Enforce Anti-AI Guardrails</span>
+                  </label>
                 </div>
                 <p className="text-xs text-slate-300 leading-relaxed">
                   The Book Engine enforces strict human prose patterns: varied sentence cadence, deep sensory immersion, subtext in character dialogue, and total elimination of AI buzzwords (e.g. "delve", "testament", "tapestry", "unwavering").
@@ -1045,6 +1235,137 @@ export const SettingsModule: React.FC = () => {
                       Clean Georgia typography, serif indentation, and page break formatting for print.
                     </div>
                   </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ========================================================= */}
+          {/* 9. LET'S CHAT DIRECTIVE SETTINGS (Cross-Directive & Intelligence) */}
+          {/* ========================================================= */}
+          {activeSection === 'lets-chat' && (
+            <div className="space-y-6 animate-in fade-in duration-200">
+              <div className="border-b border-white/10 pb-4">
+                <h3 className="text-base font-extrabold text-white flex items-center gap-2">
+                  <MessageSquareCode className="w-5 h-5 text-fuchsia-400" />
+                  <span>Let's Chat Directive & Polymath Conversational Intelligence Settings</span>
+                </h3>
+                <p className="text-xs text-slate-400 mt-1">
+                  Configure default intelligence mode, cross-directive artifact synthesis, code generation targets, and automation persistence.
+                </p>
+              </div>
+
+              {/* Default Chat Mode */}
+              <div className="space-y-3">
+                <span className="block text-xs font-bold text-white uppercase tracking-wider">
+                  Default Conversational Mode:
+                </span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                  {[
+                    { id: 'all', title: 'All-Around Polymath', desc: 'Holistic assistant combining business strategy, technical architecture, and creative copy.' },
+                    { id: 'coding', title: 'Coding & Architecture', desc: 'Focuses on production-grade React, TypeScript, Python, backend APIs, and database schemas.' },
+                    { id: 'tasks', title: 'Daily Tasks & Execution', desc: 'Time-blocked execution blueprints, daily priority checklists, and team growth workflows.' },
+                    { id: 'cross-directive', title: 'Cross-Directive Synergy', desc: 'Transforms assets between directives (e.g. Brochure headlines into mobile app UI screens).' },
+                  ].map((m) => (
+                    <label
+                      key={m.id}
+                      className={`p-3.5 rounded-2xl border flex items-start gap-3 cursor-pointer transition-all ${
+                        chatSettings.defaultMode === m.id
+                          ? 'bg-fuchsia-500/20 border-fuchsia-400 text-white shadow-sm ring-1 ring-fuchsia-400/50'
+                          : 'bg-white/[0.03] border-white/10 text-slate-300 hover:bg-white/[0.06]'
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="chatDefaultMode"
+                        value={m.id}
+                        checked={chatSettings.defaultMode === m.id}
+                        onChange={() => setChatSettings({ ...chatSettings, defaultMode: m.id as any })}
+                        className="mt-0.5 text-fuchsia-500 focus:ring-fuchsia-400"
+                      />
+                      <div>
+                        <div className="text-xs font-bold text-white">{m.title}</div>
+                        <div className="text-[11px] text-slate-400 mt-0.5">{m.desc}</div>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Code Generation Output Style */}
+              <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/10 space-y-3 text-xs">
+                <span className="block font-bold text-white uppercase tracking-wider text-[11px]">
+                  Preferred Code Generation Output Target:
+                </span>
+                <div className="flex flex-wrap gap-2.5">
+                  {(['TypeScript / React', 'Python', 'Full Stack'] as const).map((style) => (
+                    <button
+                      key={style}
+                      type="button"
+                      onClick={() => setChatSettings({ ...chatSettings, codeStyle: style })}
+                      className={`px-3.5 py-2 rounded-xl border font-bold transition-all ${
+                        chatSettings.codeStyle === style
+                          ? 'bg-fuchsia-600 text-white border-fuchsia-400 shadow-md shadow-fuchsia-500/20'
+                          : 'bg-white/5 border-white/10 text-slate-300 hover:bg-white/10'
+                      }`}
+                    >
+                      {style}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Toggles for Cross-Directive Awareness & Persistence */}
+              <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/10 space-y-3 text-xs">
+                <span className="block font-bold text-white uppercase tracking-wider text-[11px]">
+                  Automation & Live Awareness Flags:
+                </span>
+
+                <div className="space-y-2.5">
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={chatSettings.crossDirectiveAwareness}
+                      onChange={(e) => setChatSettings({ ...chatSettings, crossDirectiveAwareness: e.target.checked })}
+                      className="w-4 h-4 rounded text-fuchsia-600 focus:ring-fuchsia-400"
+                    />
+                    <div>
+                      <span className="text-white font-bold block">Live Cross-Directive Synchronization</span>
+                      <span className="text-[11px] text-slate-400">
+                        Automatically inspects current brochures, videos, apps, websites, posts, and leads during conversation requests.
+                      </span>
+                    </div>
+                  </label>
+
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={chatSettings.detailedArchitecture}
+                      onChange={(e) => setChatSettings({ ...chatSettings, detailedArchitecture: e.target.checked })}
+                      className="w-4 h-4 rounded text-fuchsia-600 focus:ring-fuchsia-400"
+                    />
+                    <div>
+                      <span className="text-white font-bold block">Architecture Blueprint Notes</span>
+                      <span className="text-[11px] text-slate-400">
+                        Includes engineering architecture callouts, error handling strategies, and setup instructions in code solutions.
+                      </span>
+                    </div>
+                  </label>
+
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={chatSettings.autoSaveSolutionsToArchive}
+                      onChange={(e) => setChatSettings({ ...chatSettings, autoSaveSolutionsToArchive: e.target.checked })}
+                      className="w-4 h-4 rounded text-fuchsia-600 focus:ring-fuchsia-400"
+                    />
+                    <div>
+                      <span className="text-white font-bold block">Auto-Save Generated Artifacts & Solutions to Archive</span>
+                      <span className="text-[11px] text-slate-400">
+                        Automatically stores generated scripts, daily plans, and cross-directive apps in Archive & History.
+                      </span>
+                    </div>
+                  </label>
                 </div>
               </div>
             </div>
